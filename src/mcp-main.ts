@@ -7,7 +7,7 @@ import { ReminderExecutor } from './reminder-execution.ts';
 import { createSandboxPayPalMcpServer } from './paypal-mcp.ts';
 
 async function main(): Promise<void> {
-  const configuration = loadConfiguration();
+  const configuration = loadConfiguration(process.env, { requireWebhookId: false });
   mkdirSync(dirname(configuration.databasePath), {
     recursive: true, mode: 0o700,
   });

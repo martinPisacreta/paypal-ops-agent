@@ -10,15 +10,18 @@ export function createSandboxUnpaidInvoiceReader(http: Transport) {
     }
     const response = await http.request(
       'GET', '/v2/invoicing/invoices', undefined,
-      { page: 1, page_size: limit },
+      { page: 1, page_size: limit, total_required: true },
     );
     const body = response.body;
     if (typeof body !== 'object' || body === null || Array.isArray(body)) {
       throw new Error('Invalid PayPal sandbox invoices response');
     }
     const record = body as Record<string, unknown>;
-    if (!Array.isArray(record.items) || record.items.length > limit ||
-        record.items.some(item => typeof item !== 'object' || item === null ||
+    // PayPal may omit items for an explicitly empty collection.
+    const invoiceItems = record.items === undefined && record.total_items === 0
+      ? [] : record.items;
+    if (!Array.isArray(invoiceItems) || invoiceItems.length > limit ||
+        invoiceItems.some(item => typeof item !== 'object' || item === null ||
           Array.isArray(item) || typeof item.id !== 'string' ||
           !item.id.trim() || typeof item.status !== 'string' ||
           !item.status.trim())) {
@@ -29,7 +32,7 @@ export function createSandboxUnpaidInvoiceReader(http: Transport) {
           Array.isArray(link) || typeof link.rel !== 'string'))) {
       throw new Error('Invalid PayPal sandbox invoices pagination');
     }
-    const invoices = record.items as Array<Record<string, unknown>>;
+    const invoices = invoiceItems as Array<Record<string, unknown>>;
     const items = invoices.filter(invoice =>
       UNPAID_STATUSES.has(invoice.status as string));
     const links = (record.links ?? []) as Array<{ rel: string }>;

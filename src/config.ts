@@ -12,6 +12,7 @@ export type Configuration = {
 // creates no approvals and makes no requests to PayPal.
 export function loadConfiguration(
   environment: NodeJS.ProcessEnv = process.env,
+  options: { requireWebhookId?: boolean } = {},
 ): Configuration {
   const selectedEnvironment = environment.PAYPAL_ENVIRONMENT ?? 'sandbox';
   if (selectedEnvironment !== 'sandbox') {
@@ -32,7 +33,10 @@ export function loadConfiguration(
     environment: 'sandbox',
     clientId: required('PAYPAL_CLIENT_ID'),
     clientSecret: required('PAYPAL_CLIENT_SECRET'),
-    webhookId: required('PAYPAL_WEBHOOK_ID'),
+    webhookId: options.requireWebhookId === false &&
+      (environment.PAYPAL_WEBHOOK_ID === undefined ||
+       environment.PAYPAL_WEBHOOK_ID === '')
+      ? '' : required('PAYPAL_WEBHOOK_ID'),
     databasePath: resolve(required('PAYPAL_DATABASE_PATH')),
   };
 }

@@ -58,7 +58,19 @@ Supply configuration through the process environment:
 - `PAYPAL_WEBHOOK_ID`
 - `PAYPAL_DATABASE_PATH=./data/operations.sqlite`
 
-See `.env.example` for configuration names. Automatic `.env` loading is not implemented. Relative paths resolve from the process working directory, so start the MCP server, webhook receiver, and approval CLI from the project root with the same database setting. Keep the sandbox database separate from the fictional demo database.
+See `.env.example` for configuration names. Load a local environment file explicitly with Node.js; the application does not load it automatically. From the project root:
+
+```sh
+node --env-file=.env --experimental-strip-types src/mcp-main.ts
+```
+
+For the existing MCP read acceptance command:
+
+```sh
+node --env-file=.env --experimental-strip-types src/mcp-read-acceptance.ts
+```
+
+Keep `.env` private and excluded from archives. Relative paths resolve from the process working directory, so start the MCP server, webhook receiver, and approval CLI from the project root with the same database setting. Keep the sandbox database separate from the fictional demo database.
 
 Keep credentials and real operational data out of source control, archives, and recordings. The `.gitignore` excludes local environment files except `.env.example`, dependencies, generated output, SQLite databases and their sidecar files, and the `data/` directory. Ignore rules do not remove previously tracked files or sanitize archives automatically.
 
