@@ -21,7 +21,7 @@ async function main(): Promise<void> {
   let transport: StdioClientTransport | undefined;
   let cleanupPassed = true;
   try {
-    const configuration = loadConfiguration();
+    const configuration = loadConfiguration(process.env, { requireWebhookId: false });
     report.configurationLoaded = true;
     const env: Record<string, string> = {};
     for (const [key, value] of Object.entries(process.env)) {

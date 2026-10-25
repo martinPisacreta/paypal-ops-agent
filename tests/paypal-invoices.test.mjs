@@ -15,7 +15,7 @@ test('invoice reads exclude paid, cancelled and unsent invoices', async () => {
   });
   const result = await reader(10);
   assert.deepEqual(calls, [[
-    'GET', '/v2/invoicing/invoices', undefined, { page: 1, page_size: 10 },
+    'GET', '/v2/invoicing/invoices', undefined, { page: 1, page_size: 10, total_required: true },
   ]]);
   assert.deepEqual(result.items.map(item => item.id), ['INV-0', 'INV-1', 'INV-2']);
   assert.equal(result.scannedCount, 8);

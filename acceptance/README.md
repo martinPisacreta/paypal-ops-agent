@@ -1,37 +1,44 @@
 # PayPal sandbox acceptance
 
-Status: blocked by missing or invalid sandbox configuration. The last attempt performed no authenticated reads. Compilation and 50 local tests passed previously; genuine sandbox acceptance remains unverified.
+Full sandbox acceptance remains incomplete.
 
-## Configure locally
+## Verified evidence
 
-Supply these settings through the local process environment:
+- Compilation and 56 local tests passed.
+- Authenticated sandbox reads succeeded through MCP for disputes and unpaid invoices.
+- MCP returned both controlled fictional invoices.
+- Both fictional invoices were activated without recipient or invoicer notifications.
+- A reminder proposal was persisted and reconciled against its intended invoice and exact text. No reminder has been sent.
 
-- PAYPAL_ENVIRONMENT=sandbox
-- PAYPAL_CLIENT_ID: sandbox application client ID
-- PAYPAL_CLIENT_SECRET: sandbox application secret
-- PAYPAL_WEBHOOK_ID: sandbox webhook ID
-- PAYPAL_DATABASE_PATH: persistent SQLite path shared with MCP and the operator approval command
+Proposal: `24d9d6ca-e3d2-4d78-af9b-86d038cff8d1`
 
-Do not paste secrets into chat or commit them. The current loader reads process environment variables; it does not automatically load a .env file. Do not use production credentials.
+Invoice: `INV2-RNWZ-5LKH-446E-ZJEU`
 
-## Verify authenticated reads
+Review the exact reminder in [the review artifact](../data/REMINDER-REVIEW-2026-10-25.md).
 
-From the project directory, run:
+## Required human review
+
+Follow [OPERATOR-APPROVAL.md](../OPERATOR-APPROVAL.md). From the project root, using the same SQLite database as MCP, run in an interactive terminal:
 
 ```sh
-node --experimental-strip-types src/sandbox-read-acceptance.ts
+PAYPAL_DATABASE_PATH=./data/operations.sqlite node --experimental-strip-types ./src/approve-reminder.ts 24d9d6ca-e3d2-4d78-af9b-86d038cff8d1
 ```
 
-The command requests one dispute page and one invoice page, each with a limit of one. Its report omits credentials and response bodies. Preserve the report as separate acceptance evidence. Both checks must pass before recording sandboxReadsVerified=true. Empty successful pages establish access, but do not establish populated-data behavior.
+Review the displayed invoice and exact note before confirming. Do not automate confirmation. Approval alone does not send the reminder.
 
-The previous attempt is recorded in sandbox-reads-20261025T114411841469Z.json. Preserve that failed result. Repeat the command after configuration is supplied or corrected.
+## Remaining acceptance
 
-## Complete the remaining workflow
+1. Record genuine human approval of the exact proposal.
+2. Execute that proposal through MCP within the approval's 15-minute validity period and verify the sandbox outcome. Reconcile uncertain outcomes before any retry.
+3. Verify genuine webhook delivery, signature verification, and durable deduplication through the configured receiver.
 
-1. Start the MCP client using ../MCP-QUICKSTART.md and verify authenticated reads through MCP. The standalone read command does not establish MCP integration.
-2. Create a proposal for an invoice controlled by the sandbox operator.
-3. Have the human operator review and approve the exact proposal using ../OPERATOR-APPROVAL.md. Do not automate the operator's confirmation.
-4. Execute that proposal through MCP before its approval expires. Record the attempt and verify the outcome in PayPal sandbox. Reconcile uncertain outcomes before further action.
-5. Verify genuine webhook delivery through the configured receiver, including signature verification and durable deduplication. Local simulated tests alone do not establish this.
+Keep each result as separate evidence. Simulated tests do not establish genuine reminder execution or webhook delivery.
 
-Keep authenticated reads, MCP integration, human approval, reminder execution, and webhook delivery as separate evidence. Full sandbox acceptance remains false until every required step has been verified.
+## Configuration
+
+Use sandbox credentials supplied locally; never commit or paste them into reports. Commands requiring `.env` values must explicitly load that file, for example with Node's `--env-file=.env`. Keep `PAYPAL_DATABASE_PATH` stable and shared across MCP, approval, and webhook processes. Preserve earlier failed acceptance records.
+
+
+## Update: approved reminder executed
+
+The earlier approval-pending and reminder-not-sent statements describe preparation. Martin subsequently approved the exact proposal, and MCP execution returned `succeeded`. A subsequent sandbox invoice lookup returned HTTP 200. See `../VALIDATION.md` for the recorded result and evidence limits. Do not repeat the reminder. Genuine webhook delivery remains unverified.
