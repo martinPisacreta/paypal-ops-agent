@@ -1,0 +1,27 @@
+# Credentials and local configuration
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+
+# Persistent operational data, including approvals
+data/
+*.sqlite
+*.sqlite3
+*.db
+*.sqlite-*
+*.sqlite3-*
+*.db-*
+
+# Dependencies and generated output
+node_modules/
+dist/
+coverage/
+*.tsbuildinfo
+
+# Local logs
+*.log
+npm-debug.log*
