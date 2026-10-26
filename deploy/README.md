@@ -48,6 +48,17 @@ systemctl enable --now paypal-webhook.service
 
 If you move the checkout, regenerate and reinstall the unit. Keep the credentials file readable only by the intended service operator.
 
+## Outbound proxy
+
+A systemd service does not inherit an interactive shell's environment. If the host reaches the internet through a proxy, the service needs those variables too: the receiver calls PayPal for OAuth and `verify-webhook-signature` on every delivery. Without them, deliveries arrive but are answered 503 and nothing is stored. One way is a drop-in such as `/etc/systemd/system/paypal-webhook.service.d/proxy.conf`:
+
+```ini
+[Service]
+EnvironmentFile=/etc/environment
+```
+
+Then run `systemctl daemon-reload` and `systemctl restart paypal-webhook.service`. Keep proxy credentials private.
+
 ## HTTPS and acceptance
 
 Configure an HTTPS reverse proxy to forward `/webhooks/paypal` to `http://127.0.0.1:8787/webhooks/paypal`, preserving the body and PayPal signature headers. Register that HTTPS URL with the same sandbox application and use its webhook ID in the environment file.
