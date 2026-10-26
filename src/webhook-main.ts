@@ -5,20 +5,30 @@ import { SandboxPayPalHttp } from './paypal-http.ts';
 import { createSandboxWebhookVerifier } from './paypal-webhook.ts';
 import { WebhookInbox } from './webhooks.ts';
 import { createWebhookServer } from './webhook-http.ts';
+import type { SignatureVerifier } from './webhooks.ts';
 
 async function main(): Promise<void> {
-  const configuration = loadConfiguration();
+  const configuration = loadConfiguration({
+    ...process.env,
+    PAYPAL_DATABASE_PATH: process.env.PAYPAL_DATABASE_PATH ?? './data/operations.sqlite',
+  }, { requireWebhookId: false });
   const portText = process.env.PAYPAL_WEBHOOK_PORT ?? '8787';
   if (!/^\d{1,5}$/.test(portText) || Number(portText) > 65535) {
     throw new Error('Invalid webhook port');
   }
   const port = Number(portText);
+
+  // Before registration, reject every delivery without persisting it.
+  // Restart after saving the real webhook ID to enable PayPal verification.
+  const verifySignature: SignatureVerifier = configuration.webhookId
+    ? createSandboxWebhookVerifier(configuration, new SandboxPayPalHttp(configuration))
+    : async () => {
+      throw new Error('Webhook registration is not configured');
+    };
+
   mkdirSync(dirname(configuration.databasePath), { recursive: true, mode: 0o700 });
-  const http = new SandboxPayPalHttp(configuration);
   const inbox = new WebhookInbox(configuration.databasePath);
-  const server = createWebhookServer(
-    inbox, createSandboxWebhookVerifier(configuration, http),
-  );
+  const server = createWebhookServer(inbox, verifySignature);
 
   try {
     await new Promise<void>((resolve, reject) => {
@@ -32,7 +42,6 @@ async function main(): Promise<void> {
       };
       server.once('error', onError);
       server.once('listening', onListening);
-      // A public HTTPS reverse proxy can forward to this local listener.
       server.listen(port, '127.0.0.1');
     });
   } catch (error) {
@@ -63,11 +72,12 @@ async function main(): Promise<void> {
     process.exitCode = 1;
     shutdown();
   });
-  process.stderr.write('PayPal sandbox webhook listener ready.\n');
+  process.stderr.write(configuration.webhookId
+    ? 'PayPal sandbox webhook listener ready.\n'
+    : 'PayPal sandbox webhook listener ready; deliveries unavailable until registration.\n');
 }
 
 void main().catch(() => {
-  // Avoid exposing credentials, filesystem paths or upstream responses.
   process.stderr.write('Webhook startup failed; check configuration and local resources.\n');
   process.exitCode = 1;
 });

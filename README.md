@@ -92,7 +92,17 @@ With sandbox configuration supplied:
 node --experimental-strip-types src/webhook-main.ts
 ```
 
-The receiver listens on `127.0.0.1:8787`; `PAYPAL_WEBHOOK_PORT` overrides the port. Configure an HTTPS reverse proxy for genuine PayPal delivery. See `deploy/README.md` for systemd and EnvironmentFile configuration.
+The receiver listens on `127.0.0.1:8787`; `PAYPAL_WEBHOOK_PORT` overrides the port. Configure an HTTPS reverse proxy for genuine PayPal delivery. Until `PAYPAL_WEBHOOK_ID` is set, it starts but rejects every delivery without storing it.
+
+To register the webhook and trigger a genuine event:
+
+```sh
+PAYPAL_WEBHOOK_URL=https://your-host/your-path node scripts/register-webhook.mjs
+# restart the receiver so it loads PAYPAL_WEBHOOK_ID
+node scripts/create-webhook-test-invoice.mjs
+```
+
+The first script registers six invoice and dispute event types and writes the webhook ID to `.env`. The second creates a fictional draft invoice that is never sent; PayPal then delivers `INVOICING.INVOICE.CREATED`. See `deploy/README.md` for systemd, proxy and EnvironmentFile configuration.
 
 ## Review a sandbox reminder
 
@@ -117,4 +127,4 @@ MIT; see `LICENSE`.
 
 ## Validation status
 
-The previous local build and all 51 tests passed, including simulated console API, persistence, approval, and duplicate-execution checks. Browser interactions, actual use from Claude, authenticated PayPal sandbox reads, human-approved sandbox execution, genuine webhook delivery across a restart, and systemd startup remain unverified. Public deployment and production readiness have not been established. See `acceptance/README.md` for the remaining PayPal procedure.
+Verified in the PayPal sandbox on 25 and 26 October 2026: MCP reads, a human-approved reminder sent exactly once, and a genuine webhook delivery verified with PayPal, stored once and deduplicated on redelivery. 56 automated tests pass. Production readiness has not been established. Details in `VALIDATION.md`.
