@@ -35,8 +35,8 @@ test('MCP executable starts over stdio and discovers tools without PayPal calls'
   try {
     await client.connect(transport);
     const result = await client.listTools();
-    assert.equal(result.tools.length, 4);
-    assert.equal(new Set(result.tools.map(tool => tool.name)).size, 4);
+    assert.equal(result.tools.length, 6);
+    assert.equal(new Set(result.tools.map(tool => tool.name)).size, 6);
     assert.equal(result.tools.some(tool => /approv/i.test(tool.name)), false);
   } finally {
     try {

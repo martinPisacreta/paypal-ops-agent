@@ -1,3 +1,4 @@
+import { explainInvoicePriority } from './priorities.ts';
 import type { ProposalStore } from './proposals.ts';
 import type { ReminderExecutor, ReminderSender } from './reminder-execution.ts';
 
@@ -26,6 +27,45 @@ export const toolDefinitions = [
     name: 'list_unpaid_invoices',
     description: 'Read unpaid sandbox invoices for review. Does not send reminders.',
     inputSchema: schema({ limit: { type: 'integer', minimum: 1, maximum: 100 } }, []),
+  },
+  {
+    name: 'explain_invoice_priority',
+    description: 'Explain an invoice position in a caller-supplied queue using deadline, outstanding amount, previous reminders and open dispute status. Compare with date-only ordering and return a draft for the calling AI client to rewrite. Snapshot data is not verified against PayPal. Does not call APIs, persist proposals, approve or send reminders.',
+    annotations: {
+      readOnlyHint: true,
+      destructiveHint: false,
+      idempotentHint: true,
+      openWorldHint: false,
+    },
+    inputSchema: schema({
+      invoiceId: text(255),
+      now: { ...text(40), description: 'Explicit ISO timestamp with timezone for reproducible classification.' },
+      invoices: {
+        type: 'array', minItems: 1, maxItems: 100,
+        description: 'Unpaid invoice snapshots in one currency. Include the queue being compared.',
+        items: schema({
+          id: text(255),
+          deadline: { type: ['string', 'null'], maxLength: 40, description: 'ISO timestamp with timezone, or null if unknown.' },
+          amount: schema({
+            value: { ...text(19), description: 'Positive outstanding decimal amount, up to 12 integer digits and six decimal places.' },
+            currency: { type: 'string', minLength: 3, maxLength: 3, pattern: '^[A-Z]{3}$' },
+          }, ['value', 'currency']),
+          previousReminders: { type: 'integer', minimum: 0, maximum: Number.MAX_SAFE_INTEGER },
+          openDispute: { type: 'boolean' },
+        }, ['id', 'deadline', 'amount', 'previousReminders', 'openDispute']),
+      },
+    }, ['invoiceId', 'now', 'invoices']),
+  },
+  {
+    name: 'get_reminder_history',
+    description: 'Read the local SQLite history for one proposal in workflow order: proposal, approval, execution attempt and result. Missing or unconfirmed results are explicitly uncertain. Does not verify recipient delivery, call PayPal, persist, approve or execute anything.',
+    annotations: {
+      readOnlyHint: true,
+      destructiveHint: false,
+      idempotentHint: true,
+      openWorldHint: false,
+    },
+    inputSchema: schema({ proposalId: text(255) }, ['proposalId']),
   },
   {
     name: 'propose_invoice_reminder',
@@ -76,6 +116,14 @@ export function createToolDispatcher(operations: Operations) {
         return operations.listDisputes(readLimit(argumentsValue));
       case 'list_unpaid_invoices':
         return operations.listUnpaidInvoices(readLimit(argumentsValue));
+      case 'explain_invoice_priority':
+        return explainInvoicePriority(argumentsValue);
+      case 'get_reminder_history': {
+        const record = objectArguments(argumentsValue, ['proposalId']);
+        return operations.proposals.getReminderHistory(
+          requiredText(record, 'proposalId', 255),
+        );
+      }
       case 'propose_invoice_reminder': {
         const record = objectArguments(argumentsValue, ['requestId', 'invoiceId', 'note']);
         return operations.proposals.createReminder({

@@ -9,9 +9,9 @@ import { ReminderExecutor } from '../src/reminder-execution.ts';
 import { createToolDispatcher, toolDefinitions } from '../src/mcp-tools.ts';
 
 // Local databases and simulated operations only; no PayPal requests.
-test('registry exposes exactly the four intended tools', () => {
+test('registry exposes exactly the six intended tools', () => {
   assert.deepEqual(toolDefinitions.map(tool => tool.name).sort(), [
-    'execute_invoice_reminder', 'list_disputes',
+    'execute_invoice_reminder', 'explain_invoice_priority', 'get_reminder_history', 'list_disputes',
     'list_unpaid_invoices', 'propose_invoice_reminder',
   ]);
   for (const tool of toolDefinitions) {

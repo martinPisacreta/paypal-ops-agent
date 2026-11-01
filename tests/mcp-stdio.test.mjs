@@ -67,7 +67,7 @@ test('stdio MCP discovers tools, reads simulated data and blocks unapproved exec
       await client.connect(transport);
       const listed = await client.listTools();
       assert.deepEqual(listed.tools.map(tool => tool.name).sort(), [
-        'execute_invoice_reminder', 'list_disputes',
+        'execute_invoice_reminder', 'explain_invoice_priority', 'get_reminder_history', 'list_disputes',
         'list_unpaid_invoices', 'propose_invoice_reminder',
       ]);
       assert.deepEqual(payload(await client.callTool({

@@ -93,3 +93,164 @@ export function prioritize(
     return aKey < bKey ? -1 : aKey > bKey ? 1 : 0;
   });
 }
+
+
+export type ExplainableInvoice = {
+  id: string;
+  deadline: string | null;
+  amount: { value: string; currency: string };
+  previousReminders: number;
+  openDispute: boolean;
+};
+
+function explanationRecord(value: unknown, keys: readonly string[]): Record<string, unknown> {
+  if (typeof value !== 'object' || value === null || Array.isArray(value)) {
+    throw new Error('Expected an object');
+  }
+  const record = value as Record<string, unknown>;
+  if (Object.keys(record).some(key => !keys.includes(key)) ||
+      keys.some(key => !Object.hasOwn(record, key))) {
+    throw new Error('Unexpected or missing explanation field');
+  }
+  return record;
+}
+
+// Exact comparison only: no floating-point money arithmetic or currency conversion.
+function explanationAmount(value: unknown): bigint {
+  if (typeof value !== 'string' || !/^(0|[1-9]\d{0,11})(?:\.\d{1,6})?$/.test(value)) {
+    throw new Error('Amount must be a positive decimal string with at most six decimal places');
+  }
+  const [whole, fraction = ''] = value.split('.');
+  const units = BigInt(whole) * 1_000_000n + BigInt(fraction.padEnd(6, '0'));
+  if (units <= 0n) throw new Error('Invoice amount must be positive');
+  return units;
+}
+
+function explanationInvoice(value: unknown): ExplainableInvoice {
+  const record = explanationRecord(value,
+    ['id', 'deadline', 'amount', 'previousReminders', 'openDispute']);
+  if (typeof record.id !== 'string' || !record.id.trim() || record.id.length > 255) {
+    throw new Error('Invalid invoice ID');
+  }
+  if (record.deadline !== null &&
+      (typeof record.deadline !== 'string' || record.deadline.length > 40)) {
+    throw new Error('Invalid deadline');
+  }
+  const amount = explanationRecord(record.amount, ['value', 'currency']);
+  explanationAmount(amount.value);
+  if (typeof amount.currency !== 'string' || !/^[A-Z]{3}$/.test(amount.currency)) {
+    throw new Error('Currency must be a three-letter uppercase code');
+  }
+  if (typeof record.previousReminders !== 'number' ||
+      !Number.isSafeInteger(record.previousReminders) || record.previousReminders < 0) {
+    throw new Error('previousReminders must be a nonnegative safe integer');
+  }
+  if (typeof record.openDispute !== 'boolean') throw new Error('Invalid openDispute');
+  return {
+    id: record.id,
+    deadline: record.deadline,
+    amount: { value: amount.value as string, currency: amount.currency },
+    previousReminders: record.previousReminders,
+    openDispute: record.openDispute,
+  };
+}
+
+const explanationIdOrder = (a: ExplainableInvoice, b: ExplainableInvoice) =>
+  a.id < b.id ? -1 : a.id > b.id ? 1 : 0;
+
+function explanationDateOrder(a: ExplainableInvoice, b: ExplainableInvoice): number {
+  if (a.deadline === null && b.deadline !== null) return 1;
+  if (a.deadline !== null && b.deadline === null) return -1;
+  const difference = a.deadline !== null && b.deadline !== null
+    ? Date.parse(a.deadline) - Date.parse(b.deadline) : 0;
+  return difference || explanationIdOrder(a, b);
+}
+
+// Read-only advisory policy over caller-supplied snapshots. No store, API or sender.
+// The caller supplies a clock so explanations and comparisons are reproducible.
+export function explainInvoicePriority(input: unknown) {
+  const record = explanationRecord(input, ['invoiceId', 'now', 'invoices']);
+  if (typeof record.invoiceId !== 'string' || !record.invoiceId.trim() ||
+      record.invoiceId.length > 255) throw new Error('Invalid invoiceId');
+  if (typeof record.now !== 'string' || record.now.length > 40) {
+    throw new Error('An explicit ISO classification clock is required');
+  }
+  const now = new Date(record.now);
+  // Reuse the existing strict calendar and timezone validation for the clock.
+  prioritize([{ id: 'explanation-clock', kind: 'unpaid_invoice', deadline: record.now }], now);
+  if (!Array.isArray(record.invoices) || record.invoices.length < 1 || record.invoices.length > 100) {
+    throw new Error('Supply between one and 100 invoices');
+  }
+  const invoices = record.invoices.map(explanationInvoice);
+  const classifications = prioritize(invoices.map(invoice => ({
+    id: invoice.id, kind: 'unpaid_invoice' as const, deadline: invoice.deadline,
+  })), now);
+  const currencies = new Set(invoices.map(invoice => invoice.amount.currency));
+  if (currencies.size !== 1) throw new Error('Compare amounts only within one currency');
+  const selected = invoices.find(invoice => invoice.id === record.invoiceId);
+  if (!selected) throw new Error('Requested invoice is absent from the supplied queue');
+  const classification = new Map(classifications.map(item => [item.id, item]));
+  const amounts = new Map(invoices.map(invoice => [invoice.id, explanationAmount(invoice.amount.value)]));
+  const needsReview = (invoice: ExplainableInvoice) => invoice.openDispute || invoice.deadline === null;
+  const contextual = [...invoices].sort((a, b) => {
+    const reviewOrder = Number(needsReview(a)) - Number(needsReview(b));
+    if (reviewOrder) return reviewOrder;
+    const urgencyOrder = rank[classification.get(a.id)!.priority] - rank[classification.get(b.id)!.priority];
+    if (urgencyOrder) return urgencyOrder;
+    const reminderOrder = a.previousReminders - b.previousReminders;
+    if (reminderOrder) return reminderOrder;
+    const aAmount = amounts.get(a.id)!;
+    const bAmount = amounts.get(b.id)!;
+    if (aAmount !== bAmount) return aAmount > bAmount ? -1 : 1;
+    return explanationDateOrder(a, b);
+  });
+  const dateOnly = [...invoices].sort(explanationDateOrder);
+  const contextualPosition = contextual.findIndex(invoice => invoice.id === selected.id) + 1;
+  const dateOnlyPosition = dateOnly.findIndex(invoice => invoice.id === selected.id) + 1;
+  const selectedClassification = classification.get(selected.id)!;
+  const reasons = [
+    selectedClassification.reason,
+    `Outstanding amount: ${selected.amount.value} ${selected.amount.currency}. Larger amounts rank first only after urgency and prior-reminder count tie.`,
+    `Previous reminders: ${selected.previousReminders}. Within an urgency category, fewer prior reminders rank first.`,
+    selected.openDispute
+      ? 'An open dispute moves this invoice into manual review after invoices eligible for reminder review.'
+      : 'No open dispute was reported in the supplied snapshot.',
+  ];
+  if (selected.deadline === null) reasons.push('Missing deadline requires manual review before preparing customer contact.');
+  const manualReview = needsReview(selected);
+  const draft = manualReview
+    ? `Review invoice ${selected.id}, outstanding ${selected.amount.value} ${selected.amount.currency}, due ${selected.deadline ?? 'unknown'}, with ${selected.previousReminders} prior reminder(s). ${selected.openDispute ? 'Resolve the open dispute before considering a payment reminder.' : 'Confirm the deadline before considering a payment reminder.'}`
+    : `Hello, we are following up on invoice ${selected.id} for ${selected.amount.value} ${selected.amount.currency}, due ${selected.deadline}. Our supplied records show ${selected.previousReminders} previous reminder(s) and no open dispute. Could you confirm its payment status? Thank you.`;
+  return {
+    invoiceId: selected.id,
+    asOf: record.now,
+    source: 'Caller-supplied snapshot; not verified against PayPal.',
+    fieldsUsed: selected,
+    priority: selectedClassification.priority,
+    position: contextualPosition,
+    isFirst: contextualPosition === 1,
+    explanation: `Invoice ${selected.id} ranks ${contextualPosition} of ${invoices.length} under the declared advisory policy.`,
+    reasons,
+    policy: [
+      'Invoices with an open dispute or missing deadline require manual review and follow the other invoices.',
+      'Then use existing urgency categories, fewer prior reminders, larger outstanding amount, earliest deadline, and invoice ID.',
+      'This is a deterministic heuristic; the calling AI client writes the final explanation and reminder.',
+    ],
+    comparison: {
+      contextualOrder: contextual.map(invoice => invoice.id),
+      dateOnlyOrder: dateOnly.map(invoice => invoice.id),
+      contextualPosition,
+      dateOnlyPosition,
+      positionsGained: dateOnlyPosition - contextualPosition,
+      dateOnlyPolicy: 'Earliest deadline first, missing deadlines last, invoice ID breaks ties.',
+    },
+    reminderDraft: {
+      audience: manualReview ? 'operator' : 'customer',
+      text: draft,
+      finalWordingBy: 'calling_ai_client',
+      requiresHumanApproval: true,
+      manualReviewRequired: manualReview,
+    },
+    effects: { persisted: false, approved: false, sent: false },
+  };
+}

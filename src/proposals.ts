@@ -1,3 +1,4 @@
+import { readReminderHistory } from './reminder-history.ts';
 import { randomUUID } from 'node:crypto';
 import { DatabaseSync } from 'node:sqlite';
 
@@ -79,6 +80,11 @@ export class ProposalStore {
       createdAt: row.created_at,
       status: 'pending',
     };
+  }
+
+  // Local snapshot only: SELECTs inside a read transaction, without API calls.
+  getReminderHistory(proposalId: string) {
+    return readReminderHistory(this.database, proposalId);
   }
 
   close(): void {

@@ -2,7 +2,7 @@
 
 ## What it does
 
-PayPal Operations Agent watches the two places where small businesses on PayPal quietly lose money: disputes that expire before anyone answers, and unpaid invoices nobody follows up on. It reads both from PayPal, ranks them by deadline in an operations console, and drafts the next action. Sending a reminder always requires a separate human approval.
+PayPal Operations Agent is a sandbox prototype for the administrative lead at a small agency who reviews overdue invoices and decides which customer to follow up with first. For a supplied invoice snapshot, it explains the priority using the deadline, outstanding amount, previous reminders and open dispute status, compares that position with deadline-only ordering, and returns a draft for the calling AI client to rewrite. A person reviews and approves the exact reminder in a separate terminal before controlled sandbox execution. Our hypothesis is that this workflow could make follow-up decisions easier; we have not measured real-user adoption, time savings or collection outcomes.
 
 ## Who it is for
 

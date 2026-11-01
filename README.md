@@ -1,6 +1,8 @@
 # PayPal Operations Agent
 
-Helps finance teams review PayPal disputes and unpaid invoices and prepare payment reminders that require human approval before sending. Built with TypeScript and Node.js, it includes sandbox MCP tools, a webhook receiver, and a local AG Grid Community demo console with fictional data.
+[Judges: try the project without credentials](JUDGES.md)
+
+A PayPal sandbox prototype for the administrative lead at a small agency who reviews overdue invoices and decides which customer to follow up with first. It explains an invoice’s position using its deadline, outstanding amount, previous reminders and open dispute status, compares that order with deadline-only sorting, and prepares a reminder draft for the AI client to rewrite before separate human approval and controlled execution. The hypothesis is that this workflow could make follow-up decisions easier; no real-user adoption, time savings or improvement in collections has been measured.
 
 ## Install, build, and test
 
@@ -40,7 +42,7 @@ Reject hides an item only for the current browser session. It neither deletes a 
 
 ## Architecture
 
-An MCP client connects to the executable server over stdio. Four tools expose sandbox dispute and unpaid-invoice reads, persistent reminder proposals, and approved reminder execution. Sandbox adapters authenticate through PayPal OAuth. SQLite stores proposals, approvals, execution attempts, and verified webhook events.
+An MCP client connects to the executable server over stdio. MCP tools expose sandbox dispute and unpaid-invoice reads, read-only priority explanations and reminder history, persistent reminder proposals, and approved reminder execution. Sandbox adapters authenticate through PayPal OAuth. SQLite stores proposals, approvals, execution attempts, and verified webhook events.
 
 The demo console uses fictional records and a separate SQLite database through the existing ProposalStore. It has no PayPal sender and cannot record approvals.
 
@@ -82,7 +84,7 @@ With sandbox configuration supplied:
 node --experimental-strip-types src/mcp-main.ts
 ```
 
-The server exposes `list_disputes`, `list_unpaid_invoices`, `propose_invoice_reminder`, and `execute_invoice_reminder`. See `MCP-QUICKSTART.md` for client setup.
+The server exposes `list_disputes`, `list_unpaid_invoices`, `explain_invoice_priority`, `get_reminder_history`, `propose_invoice_reminder`, and `execute_invoice_reminder`. See `MCP-QUICKSTART.md` for client setup.
 
 ## Run the webhook receiver
 
