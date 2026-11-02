@@ -129,4 +129,4 @@ MIT; see `LICENSE`.
 
 ## Validation status
 
-Verified in the PayPal sandbox on 25 and 26 October 2026: MCP reads, a human-approved reminder sent exactly once, and a genuine webhook delivery verified with PayPal, stored once and deduplicated on redelivery. 56 automated tests pass. Production readiness has not been established. Details in `VALIDATION.md`.
+Verified in the PayPal sandbox on 25 and 26 October 2026: MCP reads, a human-approved reminder sent exactly once, and a genuine webhook delivery verified with PayPal, stored once and deduplicated on redelivery. The automated suite has since grown to 105 tests, which run on every push (GitHub Actions on Ubuntu). Production readiness has not been established. Details in `VALIDATION.md`.
