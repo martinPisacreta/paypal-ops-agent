@@ -1,5 +1,19 @@
 # Judge quickstart
 
+## Option 1: five-minute document review — no installation
+
+This route uses repository documents only. No account, credentials, downloads or commands are required.
+
+1. **0:00–1:00 — The administrative problem.** Read [What it does](SUBMISSION.md#what-it-does): an administrative lead reviews overdue invoices while retaining control over customer contact. Business impact remains a hypothesis; no collection improvement has been measured.
+2. **1:00–2:00 — One fictional invoice.** Illustrative example only: an agency reviews a fictional overdue invoice and considers a reminder. This is not a captured PayPal operation. Read [the fictional console walkthrough](README.md#open-the-local-demo-console) for the available fields and simulated explanations.
+3. **2:00–3:00 — A linked proposal.** In that example, a saved draft would belong to the selected invoice and have its own proposal ID. Read [the architecture](README.md#architecture) and [the proposal scene](VIDEO-SCRIPT.md) for the linkage. The script is a recording plan, not proof that footage exists.
+4. **3:00–4:00 — Approval stays outside the model.** Read [operator approval](OPERATOR-APPROVAL.md): a person reviews the exact message in a separate interactive terminal. Approval expires after 15 minutes; content changes invalidate it. Saving a proposal or approving it alone sends nothing.
+5. **4:00–5:00 — The recorded attempt and its limits.** Read [the architecture](README.md#architecture) and [validation evidence](VALIDATION.md). The executor persists an attempt before contacting PayPal; uncertain outcomes require reconciliation. A local result, invoice read or creation webhook does not establish recipient delivery.
+
+The fictional example above is separate from the historical sandbox evidence in VALIDATION.md. It does not claim a newly executed end-to-end operation.
+
+## Option 2: executable walkthrough
+
 Try the fictional console and automated tests without PayPal credentials. Allow approximately 10 minutes; dependency download time varies. No PayPal account or environment file is needed for this walkthrough.
 
 ## Requirements
