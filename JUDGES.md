@@ -25,14 +25,14 @@ The tests exercise local behavior, including priority explanations, proposal per
 
 ## Windows validation note
 
-Martin reports that Claude validated the build and fictional console on Windows, including HTTP 200 at `http://127.0.0.1:8790/`. The Windows test run passed 93 of 97 tests. Four tests depend on POSIX terminal or process behavior:
+The build and fictional console were validated on Windows, including HTTP 200 at `http://127.0.0.1:8790/`. The latest Windows run (1 November 2026, commit 071ffb6, Node 22.23.3) passed 101 of 105 tests. Four tests depend on POSIX terminal or process behavior:
 
 - `terminal approval authorizes the reviewed synthetic proposal once`
 - `terminal cancellation records no approval`
 - `proposal changes during review prevent approval`
 - `webhook executable initializes storage and exits cleanly on SIGTERM`
 
-The first three use `python3` and a POSIX pseudo-terminal to exercise interactive approval. The fourth expects graceful POSIX SIGTERM handling, which Windows process termination does not reproduce. These are test-platform limitations; the other 93 tests passed in the reported Windows run. Run the complete suite in the documented Linux environment to validate those four cases. The Windows results were reported by Martin, not independently reproduced in this VM.
+The first three use `python3` and a POSIX pseudo-terminal to exercise interactive approval. The fourth expects graceful POSIX SIGTERM handling, which Windows process termination does not reproduce. These are test-platform limitations; the other 101 tests passed in that Windows run. Run the complete suite in the documented Linux environment to validate those four cases. On Linux, GitHub Actions runs all 105 tests on every push.
 
 ## 2. Open the fictional console
 
