@@ -12,6 +12,21 @@ This route uses repository documents only. No account, credentials, downloads or
 
 The fictional example above is separate from the historical sandbox evidence in VALIDATION.md. It does not claim a newly executed end-to-end operation.
 
+## Fictional evidence: due date versus contextual priority
+
+Four unchanged fictional invoices from [the existing test fixture](tests/priority-explain.test.mjs), evaluated at 2026-10-28T12:00:00Z through the read-only tool dispatcher. This is deterministic policy output, not a live AI recommendation or PayPal verification.
+
+| Invoice | Due-date rank | Tool rank | Returned explanation |
+| --- | --- | --- | --- |
+| early | 2 | 3 | Deadline has been reached or passed. Outstanding amount: 100.00 USD. Larger amounts rank first only after urgency and prior-reminder count tie. Previous reminders: 3. Within an urgency category, fewer prior reminders rank first. No open dispute was reported in the supplied snapshot. |
+| selected | 3 | 1 | Deadline has been reached or passed. Outstanding amount: 500.00 USD. Larger amounts rank first only after urgency and prior-reminder count tie. Previous reminders: 0. Within an urgency category, fewer prior reminders rank first. No open dispute was reported in the supplied snapshot. |
+| other | 4 | 2 | Deadline has been reached or passed. Outstanding amount: 100.00 USD. Larger amounts rank first only after urgency and prior-reminder count tie. Previous reminders: 0. Within an urgency category, fewer prior reminders rank first. No open dispute was reported in the supplied snapshot. |
+| disputed | 1 | 4 | Deadline has been reached or passed. Outstanding amount: 100.00 USD. Larger amounts rank first only after urgency and prior-reminder count tie. Previous reminders: 0. Within an urgency category, fewer prior reminders rank first. An open dispute moves this invoice into manual review after invoices eligible for reminder review. |
+
+The order changes: the open dispute goes to manual review; among eligible overdue invoices, fewer previous reminders come first, then larger outstanding amounts, then due date.
+
+[Complete inputs and actual outputs](evidence/priority-vs-due-date.json). No credentials, API calls, proposal persistence, approvals, sends or server listeners were used. This fixture demonstrates policy behavior; business outcomes remain unmeasured.
+
 ## Option 2: executable walkthrough
 
 Try the fictional console and automated tests without PayPal credentials. Allow approximately 10 minutes; dependency download time varies. No PayPal account or environment file is needed for this walkthrough.

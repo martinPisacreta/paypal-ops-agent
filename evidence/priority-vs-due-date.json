@@ -1,0 +1,447 @@
+{
+  "recordedAt": "2026-11-02T07:04:29.066Z",
+  "fictional": true,
+  "fixtureSource": "tests/priority-explain.test.mjs: fixture()",
+  "invocation": "createToolDispatcher with dependencies that throw on access",
+  "dependencyAccesses": [],
+  "fetchAttempts": 0,
+  "orderChanged": true,
+  "calls": [
+    {
+      "tool": "explain_invoice_priority",
+      "input": {
+        "invoiceId": "early",
+        "now": "2026-10-28T12:00:00Z",
+        "invoices": [
+          {
+            "id": "early",
+            "deadline": "2026-10-26T09:00:00Z",
+            "amount": {
+              "value": "100.00",
+              "currency": "USD"
+            },
+            "previousReminders": 3,
+            "openDispute": false
+          },
+          {
+            "id": "selected",
+            "deadline": "2026-10-27T09:00:00Z",
+            "amount": {
+              "value": "500.00",
+              "currency": "USD"
+            },
+            "previousReminders": 0,
+            "openDispute": false
+          },
+          {
+            "id": "other",
+            "deadline": "2026-10-27T10:00:00Z",
+            "amount": {
+              "value": "100.00",
+              "currency": "USD"
+            },
+            "previousReminders": 0,
+            "openDispute": false
+          },
+          {
+            "id": "disputed",
+            "deadline": "2026-10-25T09:00:00Z",
+            "amount": {
+              "value": "100.00",
+              "currency": "USD"
+            },
+            "previousReminders": 0,
+            "openDispute": true
+          }
+        ]
+      },
+      "output": {
+        "invoiceId": "early",
+        "asOf": "2026-10-28T12:00:00Z",
+        "source": "Caller-supplied snapshot; not verified against PayPal.",
+        "fieldsUsed": {
+          "id": "early",
+          "deadline": "2026-10-26T09:00:00Z",
+          "amount": {
+            "value": "100.00",
+            "currency": "USD"
+          },
+          "previousReminders": 3,
+          "openDispute": false
+        },
+        "priority": "overdue",
+        "position": 3,
+        "isFirst": false,
+        "explanation": "Invoice early ranks 3 of 4 under the declared advisory policy.",
+        "reasons": [
+          "Deadline has been reached or passed.",
+          "Outstanding amount: 100.00 USD. Larger amounts rank first only after urgency and prior-reminder count tie.",
+          "Previous reminders: 3. Within an urgency category, fewer prior reminders rank first.",
+          "No open dispute was reported in the supplied snapshot."
+        ],
+        "policy": [
+          "Invoices with an open dispute or missing deadline require manual review and follow the other invoices.",
+          "Then use existing urgency categories, fewer prior reminders, larger outstanding amount, earliest deadline, and invoice ID.",
+          "This is a deterministic heuristic; the calling AI client writes the final explanation and reminder."
+        ],
+        "comparison": {
+          "contextualOrder": [
+            "selected",
+            "other",
+            "early",
+            "disputed"
+          ],
+          "dateOnlyOrder": [
+            "disputed",
+            "early",
+            "selected",
+            "other"
+          ],
+          "contextualPosition": 3,
+          "dateOnlyPosition": 2,
+          "positionsGained": -1,
+          "dateOnlyPolicy": "Earliest deadline first, missing deadlines last, invoice ID breaks ties."
+        },
+        "reminderDraft": {
+          "audience": "customer",
+          "text": "Hello, we are following up on invoice early for 100.00 USD, due 2026-10-26T09:00:00Z. Our supplied records show 3 previous reminder(s) and no open dispute. Could you confirm its payment status? Thank you.",
+          "finalWordingBy": "calling_ai_client",
+          "requiresHumanApproval": true,
+          "manualReviewRequired": false
+        },
+        "effects": {
+          "persisted": false,
+          "approved": false,
+          "sent": false
+        }
+      }
+    },
+    {
+      "tool": "explain_invoice_priority",
+      "input": {
+        "invoiceId": "selected",
+        "now": "2026-10-28T12:00:00Z",
+        "invoices": [
+          {
+            "id": "early",
+            "deadline": "2026-10-26T09:00:00Z",
+            "amount": {
+              "value": "100.00",
+              "currency": "USD"
+            },
+            "previousReminders": 3,
+            "openDispute": false
+          },
+          {
+            "id": "selected",
+            "deadline": "2026-10-27T09:00:00Z",
+            "amount": {
+              "value": "500.00",
+              "currency": "USD"
+            },
+            "previousReminders": 0,
+            "openDispute": false
+          },
+          {
+            "id": "other",
+            "deadline": "2026-10-27T10:00:00Z",
+            "amount": {
+              "value": "100.00",
+              "currency": "USD"
+            },
+            "previousReminders": 0,
+            "openDispute": false
+          },
+          {
+            "id": "disputed",
+            "deadline": "2026-10-25T09:00:00Z",
+            "amount": {
+              "value": "100.00",
+              "currency": "USD"
+            },
+            "previousReminders": 0,
+            "openDispute": true
+          }
+        ]
+      },
+      "output": {
+        "invoiceId": "selected",
+        "asOf": "2026-10-28T12:00:00Z",
+        "source": "Caller-supplied snapshot; not verified against PayPal.",
+        "fieldsUsed": {
+          "id": "selected",
+          "deadline": "2026-10-27T09:00:00Z",
+          "amount": {
+            "value": "500.00",
+            "currency": "USD"
+          },
+          "previousReminders": 0,
+          "openDispute": false
+        },
+        "priority": "overdue",
+        "position": 1,
+        "isFirst": true,
+        "explanation": "Invoice selected ranks 1 of 4 under the declared advisory policy.",
+        "reasons": [
+          "Deadline has been reached or passed.",
+          "Outstanding amount: 500.00 USD. Larger amounts rank first only after urgency and prior-reminder count tie.",
+          "Previous reminders: 0. Within an urgency category, fewer prior reminders rank first.",
+          "No open dispute was reported in the supplied snapshot."
+        ],
+        "policy": [
+          "Invoices with an open dispute or missing deadline require manual review and follow the other invoices.",
+          "Then use existing urgency categories, fewer prior reminders, larger outstanding amount, earliest deadline, and invoice ID.",
+          "This is a deterministic heuristic; the calling AI client writes the final explanation and reminder."
+        ],
+        "comparison": {
+          "contextualOrder": [
+            "selected",
+            "other",
+            "early",
+            "disputed"
+          ],
+          "dateOnlyOrder": [
+            "disputed",
+            "early",
+            "selected",
+            "other"
+          ],
+          "contextualPosition": 1,
+          "dateOnlyPosition": 3,
+          "positionsGained": 2,
+          "dateOnlyPolicy": "Earliest deadline first, missing deadlines last, invoice ID breaks ties."
+        },
+        "reminderDraft": {
+          "audience": "customer",
+          "text": "Hello, we are following up on invoice selected for 500.00 USD, due 2026-10-27T09:00:00Z. Our supplied records show 0 previous reminder(s) and no open dispute. Could you confirm its payment status? Thank you.",
+          "finalWordingBy": "calling_ai_client",
+          "requiresHumanApproval": true,
+          "manualReviewRequired": false
+        },
+        "effects": {
+          "persisted": false,
+          "approved": false,
+          "sent": false
+        }
+      }
+    },
+    {
+      "tool": "explain_invoice_priority",
+      "input": {
+        "invoiceId": "other",
+        "now": "2026-10-28T12:00:00Z",
+        "invoices": [
+          {
+            "id": "early",
+            "deadline": "2026-10-26T09:00:00Z",
+            "amount": {
+              "value": "100.00",
+              "currency": "USD"
+            },
+            "previousReminders": 3,
+            "openDispute": false
+          },
+          {
+            "id": "selected",
+            "deadline": "2026-10-27T09:00:00Z",
+            "amount": {
+              "value": "500.00",
+              "currency": "USD"
+            },
+            "previousReminders": 0,
+            "openDispute": false
+          },
+          {
+            "id": "other",
+            "deadline": "2026-10-27T10:00:00Z",
+            "amount": {
+              "value": "100.00",
+              "currency": "USD"
+            },
+            "previousReminders": 0,
+            "openDispute": false
+          },
+          {
+            "id": "disputed",
+            "deadline": "2026-10-25T09:00:00Z",
+            "amount": {
+              "value": "100.00",
+              "currency": "USD"
+            },
+            "previousReminders": 0,
+            "openDispute": true
+          }
+        ]
+      },
+      "output": {
+        "invoiceId": "other",
+        "asOf": "2026-10-28T12:00:00Z",
+        "source": "Caller-supplied snapshot; not verified against PayPal.",
+        "fieldsUsed": {
+          "id": "other",
+          "deadline": "2026-10-27T10:00:00Z",
+          "amount": {
+            "value": "100.00",
+            "currency": "USD"
+          },
+          "previousReminders": 0,
+          "openDispute": false
+        },
+        "priority": "overdue",
+        "position": 2,
+        "isFirst": false,
+        "explanation": "Invoice other ranks 2 of 4 under the declared advisory policy.",
+        "reasons": [
+          "Deadline has been reached or passed.",
+          "Outstanding amount: 100.00 USD. Larger amounts rank first only after urgency and prior-reminder count tie.",
+          "Previous reminders: 0. Within an urgency category, fewer prior reminders rank first.",
+          "No open dispute was reported in the supplied snapshot."
+        ],
+        "policy": [
+          "Invoices with an open dispute or missing deadline require manual review and follow the other invoices.",
+          "Then use existing urgency categories, fewer prior reminders, larger outstanding amount, earliest deadline, and invoice ID.",
+          "This is a deterministic heuristic; the calling AI client writes the final explanation and reminder."
+        ],
+        "comparison": {
+          "contextualOrder": [
+            "selected",
+            "other",
+            "early",
+            "disputed"
+          ],
+          "dateOnlyOrder": [
+            "disputed",
+            "early",
+            "selected",
+            "other"
+          ],
+          "contextualPosition": 2,
+          "dateOnlyPosition": 4,
+          "positionsGained": 2,
+          "dateOnlyPolicy": "Earliest deadline first, missing deadlines last, invoice ID breaks ties."
+        },
+        "reminderDraft": {
+          "audience": "customer",
+          "text": "Hello, we are following up on invoice other for 100.00 USD, due 2026-10-27T10:00:00Z. Our supplied records show 0 previous reminder(s) and no open dispute. Could you confirm its payment status? Thank you.",
+          "finalWordingBy": "calling_ai_client",
+          "requiresHumanApproval": true,
+          "manualReviewRequired": false
+        },
+        "effects": {
+          "persisted": false,
+          "approved": false,
+          "sent": false
+        }
+      }
+    },
+    {
+      "tool": "explain_invoice_priority",
+      "input": {
+        "invoiceId": "disputed",
+        "now": "2026-10-28T12:00:00Z",
+        "invoices": [
+          {
+            "id": "early",
+            "deadline": "2026-10-26T09:00:00Z",
+            "amount": {
+              "value": "100.00",
+              "currency": "USD"
+            },
+            "previousReminders": 3,
+            "openDispute": false
+          },
+          {
+            "id": "selected",
+            "deadline": "2026-10-27T09:00:00Z",
+            "amount": {
+              "value": "500.00",
+              "currency": "USD"
+            },
+            "previousReminders": 0,
+            "openDispute": false
+          },
+          {
+            "id": "other",
+            "deadline": "2026-10-27T10:00:00Z",
+            "amount": {
+              "value": "100.00",
+              "currency": "USD"
+            },
+            "previousReminders": 0,
+            "openDispute": false
+          },
+          {
+            "id": "disputed",
+            "deadline": "2026-10-25T09:00:00Z",
+            "amount": {
+              "value": "100.00",
+              "currency": "USD"
+            },
+            "previousReminders": 0,
+            "openDispute": true
+          }
+        ]
+      },
+      "output": {
+        "invoiceId": "disputed",
+        "asOf": "2026-10-28T12:00:00Z",
+        "source": "Caller-supplied snapshot; not verified against PayPal.",
+        "fieldsUsed": {
+          "id": "disputed",
+          "deadline": "2026-10-25T09:00:00Z",
+          "amount": {
+            "value": "100.00",
+            "currency": "USD"
+          },
+          "previousReminders": 0,
+          "openDispute": true
+        },
+        "priority": "overdue",
+        "position": 4,
+        "isFirst": false,
+        "explanation": "Invoice disputed ranks 4 of 4 under the declared advisory policy.",
+        "reasons": [
+          "Deadline has been reached or passed.",
+          "Outstanding amount: 100.00 USD. Larger amounts rank first only after urgency and prior-reminder count tie.",
+          "Previous reminders: 0. Within an urgency category, fewer prior reminders rank first.",
+          "An open dispute moves this invoice into manual review after invoices eligible for reminder review."
+        ],
+        "policy": [
+          "Invoices with an open dispute or missing deadline require manual review and follow the other invoices.",
+          "Then use existing urgency categories, fewer prior reminders, larger outstanding amount, earliest deadline, and invoice ID.",
+          "This is a deterministic heuristic; the calling AI client writes the final explanation and reminder."
+        ],
+        "comparison": {
+          "contextualOrder": [
+            "selected",
+            "other",
+            "early",
+            "disputed"
+          ],
+          "dateOnlyOrder": [
+            "disputed",
+            "early",
+            "selected",
+            "other"
+          ],
+          "contextualPosition": 4,
+          "dateOnlyPosition": 1,
+          "positionsGained": -3,
+          "dateOnlyPolicy": "Earliest deadline first, missing deadlines last, invoice ID breaks ties."
+        },
+        "reminderDraft": {
+          "audience": "operator",
+          "text": "Review invoice disputed, outstanding 100.00 USD, due 2026-10-25T09:00:00Z, with 0 prior reminder(s). Resolve the open dispute before considering a payment reminder.",
+          "finalWordingBy": "calling_ai_client",
+          "requiresHumanApproval": true,
+          "manualReviewRequired": true
+        },
+        "effects": {
+          "persisted": false,
+          "approved": false,
+          "sent": false
+        }
+      }
+    }
+  ]
+}
