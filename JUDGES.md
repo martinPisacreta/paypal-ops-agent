@@ -27,6 +27,10 @@ The order changes: the open dispute goes to manual review; among eligible overdu
 
 [Complete inputs and actual outputs](evidence/priority-vs-due-date.json). No credentials, API calls, proposal persistence, approvals, sends or server listeners were used. This fixture demonstrates policy behavior; business outcomes remain unmeasured.
 
+## Recorded AI-client session
+
+[Sanitized transcript](evidence/ai-client-session-20261103/TRANSCRIPT.md) of a real AI client (Claude Code) calling this MCP server against the PayPal sandbox on 2026-11-03. Only the four read-only tools were allowed; proposing and executing reminders were disabled for that session. Tool results are recorded outputs; the final recommendation is the model's own text.
+
 ## Option 2: executable walkthrough
 
 Try the fictional console and automated tests without PayPal credentials. Allow approximately 10 minutes; dependency download time varies. No PayPal account or environment file is needed for this walkthrough.

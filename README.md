@@ -120,6 +120,7 @@ Review the invoice and complete message before entering the requested confirmati
 
 - `SUBMISSION.md`: English Devpost submission draft.
 - `VIDEO-SCRIPT.md`: recording plan targeting 2 minutes 40 seconds.
+- `evidence/ai-client-session-20261103/TRANSCRIPT.md`: sanitized transcript of a recorded AI-client session (Claude Code) that called this MCP server against the PayPal sandbox on 2026-11-03, with only the four read-only tools allowed.
 
 Label simulated footage clearly. Record genuine integration scenes only after verifying them.
 
