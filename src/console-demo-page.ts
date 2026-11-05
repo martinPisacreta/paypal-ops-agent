@@ -35,22 +35,34 @@ window.addEventListener('DOMContentLoaded', () => {
   const rejected = new Set();
   let selected = null;
   let requestNumber = 0;
+  let grid = null;
+  let statusMessage = '';
+  function setStatus(message, api = grid) {
+    statusMessage = message;
+    let loaded = 0;
+    if (api) api.forEachNode(() => { loaded++; });
+    status.textContent = (api
+      ? 'Showing ' + api.getDisplayedRowCount() + ' of ' + loaded + ' loaded simulated items. '
+      : '') + message;
+  }
   function clearSelection() {
     selected = null;
+    if (grid && grid.getSelectedRows().length) grid.deselectAll();
+    element('details').textContent = '';
     element('selection').textContent = 'Select a row to inspect its deadline and simulated rationale.';
     element('details').hidden = true;
     element('approve').disabled = true;
     element('reject').disabled = true;
   }
   if (!window.agGrid) {
-    status.textContent = 'The local AG Grid asset could not be loaded.';
+    setStatus('The local AG Grid asset could not be loaded.');
     return;
   }
-  const grid = agGrid.createGrid(element('queue'), {
+  grid = agGrid.createGrid(element('queue'), {
     columnDefs: [
       {field:'deadline',headerName:'Deadline (UTC)',sort:'asc',minWidth:205},
-      {field:'type',headerName:'Type',width:125},
-      {field:'title',headerName:'Item',minWidth:260,flex:1},
+      {field:'type',headerName:'Type',width:125,filter:'agTextColumnFilter',floatingFilter:true},
+      {field:'title',headerName:'Item',minWidth:260,flex:1,filter:'agTextColumnFilter',floatingFilter:true},
       {field:'amount',headerName:'USD',width:110,comparator:(a,b)=>Number(a)-Number(b)},
       {field:'simulatedAiRationale',headerName:'AI rationale — simulated',minWidth:330,flex:2,wrapText:true,autoHeight:true}
     ],
@@ -58,6 +70,17 @@ window.addEventListener('DOMContentLoaded', () => {
     rowData:[],
     rowSelection:{mode:'singleRow',checkboxes:false,enableClickSelection:true},
     getRowId:(params)=>params.data.id,
+    onModelUpdated:(event)=>setStatus(statusMessage,event.api),
+    onFilterChanged:(event)=>{
+      let selectionVisible = !selected;
+      if (selected) event.api.forEachNodeAfterFilter((node)=>{
+        if (node.data && node.data.id === selected.id) selectionVisible = true;
+      });
+      if (!selectionVisible) clearSelection();
+      setStatus(selectionVisible
+        ? 'Column filters updated.'
+        : 'Selection cleared because the selected item is hidden by the column filters.',event.api);
+    },
     onSelectionChanged:(event)=>{
       selected=event.api.getSelectedRows()[0] || null;
       if (!selected) {clearSelection();return;}
@@ -66,15 +89,15 @@ window.addEventListener('DOMContentLoaded', () => {
       element('details').hidden=false;
       element('approve').disabled=selected.type!=='invoice';
       element('reject').disabled=false;
-      status.textContent=selected.type==='dispute'
+      setStatus(selected.type==='dispute'
         ? 'Disputes are available for review. The existing approval control applies to invoice reminders.'
-        : 'Review the invoice before preparing and approving an exact reminder proposal.';
+        : 'Review the invoice before preparing and approving an exact reminder proposal.');
     }
   });
   async function loadQueue() {
     const current=++requestNumber;
     clearSelection();
-    status.textContent='Loading simulated queue…';
+    setStatus('Loading simulated queue…');
     const query=new URLSearchParams({deadline:element('deadline').value});
     if(element('type').value) query.set('type',element('type').value);
     try {
@@ -85,18 +108,18 @@ window.addEventListener('DOMContentLoaded', () => {
       if(current!==requestNumber) return;
       const items=body.items.filter(item=>!rejected.has(item.id));
       grid.setGridOption('rowData',items);
-      status.textContent=items.length+' simulated items, ordered by deadline.';
+      setStatus('Queue ordered by deadline.');
     } catch {
       if(current!==requestNumber) return;
       grid.setGridOption('rowData',[]);
-      status.textContent='Unable to load the demo queue. Check the local console server.';
+      setStatus('Unable to load the demo queue. Check the local console server.');
     }
   }
   element('approve').addEventListener('click',async ()=>{
     if(!selected||selected.type!=='invoice') return;
     const item=selected;
     element('approve').disabled=true;
-    status.textContent='Preparing a simulated reminder draft for terminal review…';
+    setStatus('Preparing a simulated reminder draft for terminal review…');
     try {
       const response=await fetch('/api/demo/proposals',{
         method:'POST',
@@ -115,9 +138,9 @@ window.addEventListener('DOMContentLoaded', () => {
       }
       if(selected!==item) return;
       element('details').textContent=JSON.stringify({item,proposal},null,2);
-      status.textContent='Simulated draft saved. From the project directory, review it in an interactive terminal: PAYPAL_DATABASE_PATH=./demo-console.sqlite node dist/approve-reminder.js '+proposal.id+'. Review the exact invoice and message before confirming. No approval was recorded and no reminder was sent.';
+      setStatus('Simulated draft saved. From the project directory, review it in an interactive terminal: PAYPAL_DATABASE_PATH=./demo-console.sqlite node dist/approve-reminder.js '+proposal.id+'. Review the exact invoice and message before confirming. No approval was recorded and no reminder was sent.');
     } catch {
-      if(selected===item) status.textContent='Could not confirm draft preparation. Retry to retrieve the same stored draft. No approval or send was requested.';
+      if(selected===item) setStatus('Could not confirm draft preparation. Retry to retrieve the same stored draft. No approval or send was requested.');
     } finally {
       element('approve').disabled=!selected||selected.type!=='invoice';
     }
@@ -128,7 +151,7 @@ window.addEventListener('DOMContentLoaded', () => {
     rejected.add(id);
     grid.applyTransaction({remove:[selected]});
     clearSelection();
-    status.textContent=id+' rejected in this browser session. No reminder was executed.';
+    setStatus(id+' rejected in this browser session. No reminder was executed.');
   });
   element('type').addEventListener('change',loadQueue);
   element('deadline').addEventListener('change',loadQueue);
