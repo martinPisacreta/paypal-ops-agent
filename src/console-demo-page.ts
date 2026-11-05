@@ -6,6 +6,7 @@ export const consoleDemoPage = String.raw`<!doctype html>
 <title>PayPal Operations — Demo</title>
 <style>
 *{box-sizing:border-box}body{margin:0;background:#f4f7fb;color:#182230;font:15px system-ui,sans-serif}main{max-width:1280px;margin:auto;padding:32px}h1{margin:0 0 8px;font-size:28px}.notice{padding:14px;background:#fff2cf;border-radius:8px;margin:20px 0}.toolbar{display:flex;gap:16px;align-items:end;flex-wrap:wrap;margin-bottom:16px}label{display:grid;gap:6px;font-weight:600}select,button{font:inherit;padding:9px 14px;border:1px solid #a8b5c5;border-radius:6px;background:white}button{cursor:pointer}button:disabled{opacity:.5;cursor:default}#queue{height:390px}.review{margin-top:20px;background:white;padding:20px;border:1px solid #d7e0ec;border-radius:10px}.actions{display:flex;gap:12px;margin:16px 0}pre{white-space:pre-wrap;overflow-wrap:anywhere;background:#f4f7fb;padding:14px}#status{min-height:24px;margin-top:12px}.muted{color:#526479}
+.type-badge{display:inline-block;padding:2px 8px;border-radius:999px;font-size:12px;font-weight:600;line-height:20px;pointer-events:none}.type-badge--dispute{color:#5b21b6;background:#ede9fe}.type-badge--invoice{color:#075985;background:#e0f2fe}.type-badge--unknown{color:#374151;background:#f3f4f6}
 </style>
 <script src="/vendor/ag-grid-community.min.js" defer></script>
 </head>
@@ -58,10 +59,24 @@ window.addEventListener('DOMContentLoaded', () => {
     setStatus('The local AG Grid asset could not be loaded.');
     return;
   }
+  function renderType(params) {
+    const styles = {
+      dispute: {text: 'Dispute', className: 'type-badge--dispute'},
+      invoice: {text: 'Invoice', className: 'type-badge--invoice'}
+    };
+    const value = params.value;
+    const style = typeof value === 'string' && Object.prototype.hasOwnProperty.call(styles, value)
+      ? styles[value]
+      : {text: typeof value === 'string' ? value : 'Unknown', className: 'type-badge--unknown'};
+    const badge = document.createElement('span');
+    badge.className = 'type-badge ' + style.className;
+    badge.textContent = style.text;
+    return badge;
+  }
   grid = agGrid.createGrid(element('queue'), {
     columnDefs: [
       {field:'deadline',headerName:'Deadline (UTC)',sort:'asc',minWidth:205},
-      {field:'type',headerName:'Type',width:125,filter:'agTextColumnFilter',floatingFilter:true},
+      {field:'type',headerName:'Type',width:125,filter:'agTextColumnFilter',floatingFilter:true,cellRenderer:renderType},
       {field:'title',headerName:'Item',minWidth:260,flex:1,filter:'agTextColumnFilter',floatingFilter:true},
       {field:'amount',headerName:'USD',width:110,comparator:(a,b)=>Number(a)-Number(b)},
       {field:'simulatedAiRationale',headerName:'AI rationale — simulated',minWidth:330,flex:2,wrapText:true,autoHeight:true}

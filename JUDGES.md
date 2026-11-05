@@ -163,3 +163,4 @@ A browser-only version of the fictional console is published at <https://tienda.
 - It embeds the fictional records from `src/console-demo-data.ts` and applies the same filtering and ordering as `/api/demo/queue`. Before publishing, four queries were checked against the compiled API.
 - It does not connect to the PayPal sandbox. The sandbox integration is shown in the video and in Option 2 above.
 - The Type and Item columns include AG Grid Community text filters (floating filter row). The status line shows displayed versus loaded rows, and a selection hidden by a filter is cleared so no hidden record stays actionable.
+- The Type column uses a small AG Grid cell renderer: Dispute and Invoice appear as labeled badges built with textContent, while sorting and filtering keep the original values.
