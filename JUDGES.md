@@ -1,5 +1,5 @@
 # Judge quickstart
-
+**No installation:** a hosted static version of the fictional console runs in any browser at <https://tienda.textokit.store/paypal-demo/>. See [Hosted static demo](#hosted-static-demo).
 ## Option 1: five-minute document review — no installation
 
 This route uses repository documents only. No account, credentials, downloads or commands are required.
@@ -153,3 +153,12 @@ Open `http://127.0.0.1:8790/sandbox` on the same machine. This view reads sandbo
 The sandbox console does not approve or execute reminders. Consult [OPERATOR-APPROVAL.md](OPERATOR-APPROVAL.md) before using the separate approval and MCP execution workflow. A recorded execution result does not independently verify receipt by the recipient.
 
 Keep `.env`, credentials, and SQLite files out of submissions, screenshots, and source control. Stop the console with **Ctrl+C** when finished.
+
+## Hosted static demo
+
+A browser-only version of the fictional console is published at <https://tienda.textokit.store/paypal-demo/>. No account, credentials, installation or commands are required.
+
+- Every record and AI rationale on that page is fictional. No PayPal account or credentials are used.
+- Filtering, sorting, previews and rejection run in the browser. The page makes no API calls.
+- It embeds the fictional records from `src/console-demo-data.ts` and applies the same filtering and ordering as `/api/demo/queue`. Before publishing, four queries were checked against the compiled API.
+- It does not connect to the PayPal sandbox. The sandbox integration is shown in the video and in Option 2 above.
