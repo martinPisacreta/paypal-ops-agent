@@ -14,7 +14,7 @@ Proposal: `24d9d6ca-e3d2-4d78-af9b-86d038cff8d1`
 
 Invoice: `INV2-RNWZ-5LKH-446E-ZJEU`
 
-Review the exact reminder in [the review artifact](../data/REMINDER-REVIEW-2026-10-25.md).
+The exact reminder was reviewed in the local artifact `data/REMINDER-REVIEW-2026-10-25.md`, which is not published because `data/` holds operational records and approvals (see `.gitignore`).
 
 ## Required human review
 
